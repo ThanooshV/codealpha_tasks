@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional FAQ Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* General Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: #f4f7fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 400px;
+            max-width: 90%;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #4e73df, #1cc88a);
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f9fafc;
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .user {
+            align-self: flex-end;
+            background: #1cc88a;
+            color: #fff;
+            border-bottom-right-radius: 0;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: #e4e6eb;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            background: #fff;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: none;
+            padding: 14px 18px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input button {
+            padding: 0 24px;
+            border: none;
+            background: #4e73df;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #2e59d9;
+        }
+
+        /* Scrollbar styling */
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-box::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">Professional FAQ Chatbot</div>
+        <div class="chat-box" id="chatbox"></div>
+        <div class="chat-input">
+            <input id="userInput" type="text" placeholder="Ask me anything...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const inputField = document.getElementById("userInput");
+            const userText = inputField.value.trim();
+            if (!userText) return;
+
+            const chatbox = document.getElementById("chatbox");
+
+            // Add user bubble
+            const userBubble = document.createElement("div");
+            userBubble.className = "chat-bubble user";
+            userBubble.textContent = userText;
+            chatbox.appendChild(userBubble);
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            inputField.value = "";
+
+            // Call backend API
+            try {
+                const response = await fetch("http://127.0.0.1:5000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: userText })
+                });
+
+                const data = await response.json();
+                const botBubble = document.createElement("div");
+                botBubble.className = "chat-bubble bot";
+
+                if (data.reply) {
+                    botBubble.innerHTML = `<strong>Answer:</strong> ${data.reply}<br><small>Matched question: ${data.matched_question || "N/A"} | Score: ${data.score || 0}</small>`;
+                } else {
+                    botBubble.textContent = "Oops! Something went wrong.";
+                }
+
+                chatbox.appendChild(botBubble);
+                chatbox.scrollTop = chatbox.scrollHeight;
+
+            } catch (error) {
+                const botBubble = document.createElement("div");
+                botBubble.className = "chat-bubble bot";
+                botBubble.textContent = "Error connecting to server.";
+                chatbox.appendChild(botBubble);
+            }
+        }
+
+        // Allow Enter key to send message
+        document.getElementById("userInput").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+</html>
